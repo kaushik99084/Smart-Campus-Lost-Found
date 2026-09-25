@@ -1,0 +1,307 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: #eef2ef;
+    color: #1f2933;
+    padding: 28px;
+}
+
+.container {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.main-tittle,
+.main-title {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 700;
+    margin: 10px 0 8px;
+    color: #263238;
+}
+
+.container > p,
+body > p {
+    text-align: center;
+    color: #66736c;
+    margin-bottom: 24px;
+}
+
+.main {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+.card {
+    background: #ffffff;
+    border: 1px solid #e3e8e5;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(31, 41, 51, 0.08);
+    width: 100%;
+}
+
+.card h3 {
+    font-size: 22px;
+    margin-bottom: 18px;
+    color: #263238;
+}
+
+.card h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #263238;
+}
+
+input,
+select {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    margin-bottom: 14px;
+    border: 1px solid #d7ded9;
+    border-radius: 8px;
+    background: #fbfcfb;
+    color: #111827;
+    font-size: 15px;
+    outline: none;
+}
+
+input:focus,
+select:focus {
+    border-color: #7b4f47;
+    box-shadow: 0 0 0 3px rgba(123, 79, 71, 0.14);
+}
+
+label {
+    display: block;
+    margin: 2px 0 8px;
+    font-weight: 600;
+    color: #39443f;
+}
+
+button {
+    width: 100%;
+    min-height: 46px;
+    border: none;
+    border-radius: 8px;
+    background: #7b4f47;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    background: #68423b;
+    transform: translateY(-1px);
+}
+
+button + button {
+    margin-top: 10px;
+}
+
+#results,
+#claims,
+#items,
+#pendingUsers,
+#myReports,
+#myClaims,
+#stats {
+    margin-top: 16px;
+}
+
+#results .card,
+#claims .card,
+#items .card,
+#pendingUsers .card,
+#myReports .card,
+#myClaims .card {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: none;
+    background: #f8faf8;
+}
+
+.card p {
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 7px 0;
+    overflow-wrap: break-word;
+}
+
+.admin-card {
+    border-top: 4px solid #7b4f47;
+}
+
+@media (min-width: 1200px) {
+    .main {
+        grid-template-columns: repeat(3, minmax(320px, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    body {
+        padding: 16px;
+    }
+
+    .main {
+        grid-template-columns: 1fr;
+    }
+
+    .main-tittle,
+    .main-title {
+        font-size: 27px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+}
+body {
+    background:
+        radial-gradient(circle at top left, rgba(123, 79, 71, 0.10), transparent 32%),
+        #eef2ef;
+}
+
+.container {
+    padding-top: 28px;
+}
+
+.main-tittle,
+.main-title {
+    font-size: 38px;
+    letter-spacing: 0;
+}
+
+#adminInfo,
+#userInfo {
+    margin-bottom: 34px;
+    font-size: 17px;
+    color: #5f6b66;
+    font-weight: 500;
+}
+
+.main {
+    grid-template-columns: repeat(3, minmax(300px, 1fr));
+    gap: 28px;
+}
+
+.card {
+    border-radius: 14px;
+    padding: 28px;
+    border: 1px solid rgba(31, 41, 51, 0.08);
+    box-shadow: 0 18px 45px rgba(31, 41, 51, 0.09);
+}
+
+.card h3 {
+    font-size: 24px;
+    margin-bottom: 22px;
+}
+
+button {
+    height: 50px;
+    border-radius: 9px;
+    background: #7b4f47;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #633e38;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.stat-box {
+    min-height: 86px;
+    padding: 14px;
+    border-radius: 12px;
+    background: #f7f9f7;
+    border: 1px solid #e1e7e3;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-box span {
+    font-size: 13px;
+    color: #66736c;
+    font-weight: 600;
+}
+
+.stat-box b {
+    font-size: 28px;
+    color: #263238;
+}
+
+.stat-box.success {
+    background: #edf8f1;
+}
+
+.stat-box.warning {
+    background: #fff7e8;
+}
+
+.stat-box.danger {
+    background: #fff0f0;
+}
+
+.stat-box.lost {
+    background: #eef3ff;
+}
+
+.stat-box.found {
+    background: #eefaf8;
+}
+
+#claims .card,
+#items .card,
+#pendingUsers .card {
+    background: #f8faf8;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+@media (max-width: 1050px) {
+    .main {
+        grid-template-columns: repeat(2, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .main {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .main-tittle,
+    .main-title {
+        font-size: 30px;
+    }
+}
+.item-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    border: 1px solid #e1e7e3;
+}

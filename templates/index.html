@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Lost & Found Portal</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+
+<body>
+
+    <p style="text-align:center; color:#666;">
+        Report, Search and Claim Lost Items Easily
+    </p>
+
+    <div class="container">
+
+        <h1 class="main-tittle">Campus Lost & Found</h1>
+        <p id="userInfo" style="text-align:center; color:#555;"></p>
+
+        <div class="main">
+
+            <!-- ADD ITEM -->
+            <div class="card">
+                <h3>Add Item</h3>
+
+                <input id="title" placeholder="Title">
+                <input id="desc" placeholder="Description">
+
+                <select id="cat">
+                    <option value="electronics">Electronics</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="documents">Documents</option>
+                    <option value="others">Others</option>
+                </select>
+
+                <input id="color" placeholder="Color">
+                <input id="brand" placeholder="Brand / Company">
+                <input id="loc" placeholder="Location">
+                <label>Lost/Found Date</label>
+                <input id="event_date" type="date">
+
+
+                <select id="report_type">
+                    <option value="lost">Lost</option>
+                    <option value="found">Found</option>
+                </select>
+                <input id="image" type="file" accept="image/*">
+
+                <button onclick="addItem()">Add Item</button>
+            </div>
+
+            <!-- SEARCH -->
+            <div class="card">
+                <h3>Search Matching Items</h3>
+
+                <input id="search" placeholder="Enter keyword">
+
+                <select id="filterStatus">
+                    <option value="">All Open Items</option>
+                    <option value="open">Open</option>
+                    <option value="under_review">Under Review</option>
+                    <option value="claimed">Claimed</option>
+                    <option value="returned">Returned</option>
+                </select>
+
+                <button onclick="search()">Search</button>
+
+                <div id="results"></div>
+            </div>
+
+            <!-- ADMIN PANEL -->
+            <div class="card admin-card" id="adminPanel">
+                <h3>Admin Panel</h3>
+                <button onclick="loadClaims()">Load Claims</button>
+
+                <div id="claims"></div>
+            </div>
+            <div class="card">
+                <h3>My Reports</h3>
+                <button onclick="loadMyReports()">Load My Reports</button>
+                <div id="myReports"></div>
+            </div>
+
+            <div class="card">
+                <h3>My Claims</h3>
+                <button onclick="loadMyClaims()">Load My Claims</button>
+                <div id="myClaims"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const base = "http://127.0.0.1:5000";
+
+        function addItem() {
+            const userId = localStorage.getItem("user_id");
+
+            if (!userId) {
+                alert("Please login first");
+                window.location.href = "/login-page";
+                return;
+            }
+
+            const formData = new FormData();
+
+            formData.append("title", document.getElementById("title").value);
+            formData.append("description", document.getElementById("desc").value);
+            formData.append("category", document.getElementById("cat").value);
+            formData.append("color", document.getElementById("color").value);
+            formData.append("brand", document.getElementById("brand").value);
+            formData.append("location", document.getElementById("loc").value);
+            formData.append("event_date", document.getElementById("event_date").value);
+            formData.append("report_type", document.getElementById("report_type").value);
+            formData.append("reported_by", userId);
+
+            const image = document.getElementById("image").files[0];
+
+            if (image) {
+                formData.append("image", image);
+            }
+
+            fetch(base + "/add-item", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => alert(data.message || data.error));
+        }
+
+
+        function search() {
+            let keyword = document.getElementById("search").value;
+            let status = document.getElementById("filterStatus").value;
+
+            if (!keyword) {
+                alert("Enter a keyword to search");
+                return;
+            }
+
+            fetch(base + "/match/" + keyword + "?status=" + status)
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.matches && data.matches.length > 0) {
+                        data.matches.forEach(item => {
+                            html += `
+                                <div class="card">
+                                    ${item.image_url ? `<img src="${item.image_url}" class="item-img">` : ""}
+                                    <h4>${item.title}</h4>
+                                    <p>${item.description || ""}</p>
+                                    <p><b>Category:</b> ${item.category}</p>
+                                    <p><b>Color:</b> ${item.color || "Not added"}</p>
+                                    <p><b>Brand:</b> ${item.brand || "Not added"}</p>
+                                    <p><b>Location:</b> ${item.location}</p>
+                                    <p><b>Date:</b> ${item.event_date || "Not added"}</p>
+                                    <p><b>Report Type:</b> ${item.report_type}</p>
+                                    <p><b>Status:</b> ${item.status}</p>
+
+                                    <button onclick="claimItem(${item.item_id})">
+                                        Claim
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = "<p>No matching items found</p>";
+                    }
+
+                    document.getElementById("results").innerHTML = html;
+                });
+        }
+
+        function claimItem(item_id) {
+            const userId = localStorage.getItem("user_id");
+
+            if (!userId) {
+                alert("Please login first");
+                window.location.href = "/login-page";
+                return;
+            }
+
+            const proof = prompt("Enter proof that this item belongs to you");
+
+            if (!proof) {
+                alert("Proof is required to claim an item");
+                return;
+            }
+
+            fetch(base + "/claim", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    item_id: item_id,
+                    claimant_id: userId,
+                    proof_description: proof
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                });
+        }
+
+        function loadClaims() {
+            fetch(base + "/get-claims")
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.length > 0) {
+                        data.forEach(c => {
+                            html += `
+                                <div class="card">
+                                    <p><b>Claim ID:</b> ${c.claim_id}</p>
+                                    <p><b>Item:</b> ${c.item_name}</p>
+                                    <p><b>Claimed By:</b> ${c.claimant_name}</p>
+                                    <p><b>Proof:</b> ${c.proof_description}</p>
+                                    <p><b>Status:</b> ${c.status}</p>
+
+                                    <button onclick="approve(${c.claim_id})">Approve</button>
+                                    <button onclick="reject(${c.claim_id})">Reject</button>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = "<p>No claims found</p>";
+                    }
+
+                    document.getElementById("claims").innerHTML = html;
+                });
+        }
+
+        function approve(claim_id) {
+            const reviewedBy = localStorage.getItem("user_id");
+
+            fetch(base + "/approve-claim/" + claim_id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reviewed_by: reviewedBy
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    loadClaims();
+                });
+        }
+
+        function reject(claim_id) {
+            const reviewedBy = localStorage.getItem("user_id");
+
+            fetch(base + "/reject-claim/" + claim_id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reviewed_by: reviewedBy
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    loadClaims();
+                });
+        }
+        window.onload = function () {
+            const role = localStorage.getItem("role");
+            const name = localStorage.getItem("name");
+
+            document.getElementById("userInfo").innerText =
+                "Logged in as " + name + " (" + role + ")";
+
+            if (role !== "admin" && role !== "security") {
+                document.getElementById("adminPanel").style.display = "none";
+            }
+        };
+        function loadMyReports() {
+            const userId = localStorage.getItem("user_id");
+
+            if (!userId) {
+                alert("Please login first");
+                window.location.href = "/login-page";
+                return;
+            }
+
+            fetch(base + "/my-reports/" + userId)
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            html += `
+                        <div class="card">
+                            <h4>${item.title}</h4>
+                            <p><b>Category:</b> ${item.category}</p>
+                            <p><b>Color:</b> ${item.color || "Not added"}</p>
+                            <p><b>Brand:</b> ${item.brand || "Not added"}</p>
+                            <p><b>Location:</b> ${item.location}</p>
+                            <p><b>Date:</b> ${item.event_date || "Not added"}</p>
+                            <p><b>Type:</b> ${item.report_type}</p>
+                            <p><b>Status:</b> ${item.status}</p>
+                        </div>
+                    `;
+                        });
+                    } else {
+                        html = "<p>You have not reported any items yet</p>";
+                    }
+
+                    document.getElementById("myReports").innerHTML = html;
+                });
+        };
+        function loadMyClaims() {
+            const userId = localStorage.getItem("user_id");
+
+            if (!userId) {
+                alert("Please login first");
+                window.location.href = "/login-page";
+                return;
+            }
+
+            fetch(base + "/my-claims/" + userId)
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.length > 0) {
+                        data.forEach(c => {
+                            html += `
+                        <div class="card">
+                            <p><b>Claim ID:</b> ${c.claim_id}</p>
+                            <p><b>Item:</b> ${c.item_name}</p>
+                            <p><b>Proof:</b> ${c.proof_description}</p>
+                            <p><b>Claim Status:</b> ${c.status}</p>
+                            <p><b>Item Status:</b> ${c.item_status}</p>
+                        </div>
+                    `;
+                        });
+                    } else {
+                        html = "<p>You have not claimed any items yet</p>";
+                    }
+
+                    document.getElementById("myClaims").innerHTML = html;
+                });
+        };
+
+
+
+    </script>
+
+</body>
+
+</html>

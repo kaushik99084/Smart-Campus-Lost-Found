@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Admin Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1 class="main-tittle">Admin Dashboard</h1>
+        <p id="adminInfo" style="text-align:center; color:#555;"></p>
+
+        <div class="main">
+
+            <!-- Analytics -->
+            <div class="card">
+                <h3>System Analytics</h3>
+                <button onclick="loadStats()">Load Analytics</button>
+                <div id="stats"></div>
+            </div>
+
+            <!-- Pending Users -->
+            <div class="card">
+                <h3>Pending User Verification</h3>
+                <button onclick="loadPendingUsers()">Load Pending Users</button>
+                <div id="pendingUsers"></div>
+            </div>
+
+            <!-- Claims -->
+            <div class="card">
+                <h3>Claim Requests</h3>
+                <button onclick="loadClaims()">Load Claims</button>
+                <div id="claims"></div>
+            </div>
+
+            <!-- Items -->
+            <div class="card">
+                <h3>All Items</h3>
+                <button onclick="loadItems()">Load Items</button>
+                <div id="items"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const base = "http://127.0.0.1:5000";
+
+        // 🔐 AUTH CHECK
+        window.onload = function () {
+            const role = localStorage.getItem("role");
+            const name = localStorage.getItem("name");
+
+            if (role !== "admin" && role !== "security") {
+                alert("Only admin/security can access this page ❌");
+                window.location.href = "/login-page";
+                return;
+            }
+
+            document.getElementById("adminInfo").innerText =
+                "Logged in as " + name + " (" + role + ")";
+
+            loadStats();
+        };
+
+        // 👤 LOAD PENDING USERS
+        function loadPendingUsers() {
+            fetch(base + "/pending-users")
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.length > 0) {
+                        data.forEach(u => {
+                            html += `
+                                <div class="card">
+                                    <p><b>Name:</b> ${u.name}</p>
+                                    <p><b>Email:</b> ${u.email}</p>
+                                    <p><b>Student ID:</b> ${u.student_id || "Not added"}</p>
+                                    <p><b>Role:</b> ${u.role}</p>
+                                    <button onclick="verifyUser(${u.user_id})">Verify</button>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = "<p>No pending users</p>";
+                    }
+
+                    document.getElementById("pendingUsers").innerHTML = html;
+                });
+        }
+
+        function verifyUser(user_id) {
+            const reviewedBy = localStorage.getItem("user_id");
+
+            fetch(base + "/verify-user/" + user_id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reviewed_by: reviewedBy })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    loadPendingUsers();
+                });
+        }
+
+        // 📦 LOAD CLAIMS
+        function loadClaims() {
+            fetch(base + "/get-claims")
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.length > 0) {
+                        data.forEach(c => {
+                            html += `
+                                <div class="card">
+                                    <p><b>Claim ID:</b> ${c.claim_id}</p>
+                                    <p><b>Item:</b> ${c.item_name}</p>
+                                    <p><b>Claimed By:</b> ${c.claimant_name}</p>
+                                    <p><b>Roll No:</b> ${c.claimant_roll_no || "Not added"}</p>
+                                    <p><b>Proof:</b> ${c.proof_description || "Not provided"}</p>
+                                    <p><b>Status:</b> ${c.status}</p>
+
+                                    ${c.status === "pending" ? `
+                                        <button onclick="approve(${c.claim_id})">Approve</button>
+                                        <button onclick="reject(${c.claim_id})">Reject</button>
+                                    ` : ""}
+
+                                    ${c.status === "approved" ? `
+                                        <button onclick="markReturned(${c.claim_id})">Mark Returned</button>
+                                    ` : ""}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = "<p>No claims found</p>";
+                    }
+
+                    document.getElementById("claims").innerHTML = html;
+                });
+        }
+
+        function approve(claim_id) {
+            const reviewedBy = localStorage.getItem("user_id");
+
+            fetch(base + "/approve-claim/" + claim_id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reviewed_by: reviewedBy })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    loadClaims();
+                });
+        }
+
+        function reject(claim_id) {
+            const reviewedBy = localStorage.getItem("user_id");
+
+            fetch(base + "/reject-claim/" + claim_id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reviewed_by: reviewedBy })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    loadClaims();
+                });
+        }
+
+        function markReturned(claim_id) {
+            const reviewedBy = localStorage.getItem("user_id");
+
+            fetch(base + "/mark-returned/" + claim_id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reviewed_by: reviewedBy })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    loadClaims();
+                    loadStats();
+                });
+        }
+
+        // 📦 LOAD ITEMS
+        function loadItems() {
+            fetch(base + "/items")
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            html += `
+                                <div class="card">
+                                    <h4>${item.title}</h4>
+                                    <p><b>Category:</b> ${item.category}</p>
+                                    <p><b>Color:</b> ${item.color || "Not added"}</p>
+                                    <p><b>Brand:</b> ${item.brand || "Not added"}</p>
+                                    <p><b>Location:</b> ${item.location}</p>
+                                    <p><b>Date:</b> ${item.event_date || "Not added"}</p>
+                                    <p><b>Type:</b> ${item.report_type}</p>
+                                    <p><b>Status:</b> ${item.status}</p>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html = "<p>No items found</p>";
+                    }
+
+                    document.getElementById("items").innerHTML = html;
+                });
+        }
+
+        // 📊 LOAD STATS
+        function loadStats() {
+    fetch(base + "/admin-stats")
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            document.getElementById("stats").innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-box"><span>Total Users</span><b>${data.total_users}</b></div>
+                    <div class="stat-box"><span>Verified</span><b>${data.verified_users}</b></div>
+                    <div class="stat-box warning"><span>Pending Users</span><b>${data.pending_users}</b></div>
+                    <div class="stat-box"><span>Total Items</span><b>${data.total_items}</b></div>
+                    <div class="stat-box lost"><span>Lost Items</span><b>${data.lost_items}</b></div>
+                    <div class="stat-box found"><span>Found Items</span><b>${data.found_items}</b></div>
+                    <div class="stat-box warning"><span>Pending Claims</span><b>${data.pending_claims}</b></div>
+                    <div class="stat-box success"><span>Approved</span><b>${data.approved_claims}</b></div>
+                    <div class="stat-box danger"><span>Rejected</span><b>${data.rejected_claims}</b></div>
+                    <div class="stat-box success"><span>Returned</span><b>${data.returned_items}</b></div>
+                </div>
+            `;
+        });
+}
+
+
+    </script>
+
+</body>
+</html>
